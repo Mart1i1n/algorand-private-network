@@ -1,0 +1,44 @@
+{
+  "network": "devnet",
+  "proto": "future",
+  "rwd": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+  "fees": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ",
+  "devmode": true,
+  "alloc": [
+    {
+      "addr": "3QZ3YL6COBOZDICAFU2MSVBT2YOST63YOY2CKEG5HMYDPA2FLOYRHM43ZM",
+      "comment": "Main test account",
+      "state": {
+        "algo": 10000000000000000
+      }
+    },
+    {
+      "addr": "V77HDPVOS3LNTIM24BU6VTFNKYEOYPLTDJ425ACXYRFLNA3V62K6WDL6R4",
+      "comment": "Account 1",
+      "state": {
+        "algo": 1000000000000000
+      }
+    },
+    {
+      "addr": "SVDZZDHU4U6NKHIMBNGSAXFPHPWFOV4AF44OIN3DOAAHUAOKJWO4UHIQ4U",
+      "comment": "Account 2",
+      "state": {
+        "algo": 1000000000000000
+      }
+    },
+    {
+      "addr": "GGTQVLVCSSDF5AHKENICW6I7EYOU7DKYT4AWZ3WWKB7FOR6HE3A6GBHTBM",
+      "comment": "Account 3",
+      "state": {
+        "algo": 1000000000000000
+      }
+    },
+    {
+      "addr": "B5ZCR4GBW7L5TIH57IRBXNKZZEGDLVQDS7NIVGEJZRVZHN3W5I7FWHJ6NQ",
+      "comment": "Account 4",
+      "state": {
+        "algo": 1000000000000000
+      }
+    }
+  ]
+}

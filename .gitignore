@@ -1,0 +1,29 @@
+# Algorand 私有网络数据目录
+private_net_data/
+config/
+
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# 临时文件
+*.log
+*.tmp
+*.bak
