@@ -22,16 +22,23 @@ docker run -d --rm \
   -p 4003:8082 \
   -p 4004:8083 \
   algorand/algod:latest \
-  bash -c "
+  bash -c '
+    # 配置所有节点监听 0.0.0.0（允许外部访问）
+    echo "0.0.0.0:8080" > /data/relay/algod-listen.net
+    echo "0.0.0.0:8081" > /data/node1/algod-listen.net
+    echo "0.0.0.0:8082" > /data/node2/algod-listen.net
+    echo "0.0.0.0:8083" > /data/node3/algod-listen.net
+    
     cd /data
     goal network start -r /data
-    echo '✅ 网络已启动'
+    echo "✅ 网络已启动"
+    
     # 保持运行
     tail -f /dev/null
-  "
+  '
 
 echo "⏳ 等待网络启动..."
-sleep 8
+sleep 10
 
 echo ""
 echo "📊 检查节点状态..."
@@ -65,5 +72,8 @@ echo "  停止网络: docker stop algo_private_network"
 echo "  查看日志: docker logs -f algo_private_network"
 echo ""
 echo "测试网络:"
-echo "  ./scripts/test_private_network.sh"
+echo "  ./scripts/test_goal_network.sh"
+echo ""
+echo "验证区块增长:"
+echo "  for i in {1..3}; do docker exec algo_private_network goal network status -r /data | grep 'Last committed block'; sleep 5; done"
 echo ""

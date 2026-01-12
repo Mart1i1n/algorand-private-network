@@ -18,7 +18,7 @@
 ### 系统要求
 - macOS / Linux / Windows (with Docker)
 - Docker Desktop 已安装并运行
-- Python 3.7+ (用于辅助脚本，推荐 3.11+)
+- Python 3.7+ (用于tps)
 - 至少 2GB 可用磁盘空间
 - 至少 4GB RAM
 
@@ -31,8 +31,6 @@ docker --version
 # 检查 Docker 是否运行
 docker ps
 ```
-
-如果 Docker 未运行，请启动 Docker Desktop。
 
 ---
 
@@ -52,10 +50,6 @@ cd /Users/mingfei/Code/algorand-private-network
 # 检查 Python 版本
 python --version  # 应该显示 3.7 或更高
 
-# 如果使用 pyenv
-pyenv versions
-# 确保当前版本是 3.7+
-
 # 创建虚拟环境
 python -m venv venv
 
@@ -67,31 +61,6 @@ python --version
 
 # 安装依赖
 pip install py-algorand-sdk
-```
-
-**常见问题：** 如果虚拟环境使用了错误的 Python 版本（如系统的 Python 3.6），删除后重建：
-
-```bash
-rm -rf venv
-python -m venv venv  # 使用正确的 Python 版本
-source venv/bin/activate
-pip install py-algorand-sdk
-```
-
-### 1.3 停止其他 Algorand 网络
-
-确保没有其他 Algorand 网络在运行，避免端口冲突：
-
-```bash
-# 停止 AlgoKit LocalNet（如果在运行）
-algokit localnet stop
-
-# 停止之前的 docker-compose 网络（如果在运行）
-docker-compose down
-
-# 清理旧的私有网络容器（如果存在）
-docker stop algo_private_network 2>/dev/null || true
-docker rm algo_private_network 2>/dev/null || true
 ```
 
 ---
@@ -122,18 +91,6 @@ docker rm algo_private_network 2>/dev/null || true
 ```bash
 ./scripts/create_network_config.sh
 ```
-
-**这个脚本做了什么：**
-
-1. 停止所有现有网络
-2. 清理旧配置目录
-3. 使用 Docker 运行 `goal network create` 命令
-4. 根据 `network_template.json` 生成：
-   - `genesis.json` - Genesis 区块配置
-   - 4个节点的数据目录 (relay, node1, node2, node3)
-   - 4个钱包的根密钥 (Wallet1-4.rootkey)
-   - 3个参与密钥 (Wallet1-3.partkey)
-   - `network.json` - 网络拓扑和端口配置
 
 **预期输出：**
 
@@ -192,33 +149,6 @@ private_net_data/
 
 ### 3.1 启动所有节点
 
-**推荐方式：使用正确配置启动（确保外部可访问）**
-
-```bash
-docker run -d \
-  --name algo_private_network \
-  -v "$PWD/private_net_data:/data" \
-  -p 4001:8080 \
-  -p 4002:8081 \
-  -p 4003:8082 \
-  -p 4004:8083 \
-  algorand/algod:latest \
-  bash -c '
-    # 配置所有节点监听 0.0.0.0（允许外部访问）
-    echo "0.0.0.0:8080" > /data/relay/algod-listen.net
-    echo "0.0.0.0:8081" > /data/node1/algod-listen.net
-    echo "0.0.0.0:8082" > /data/node2/algod-listen.net
-    echo "0.0.0.0:8083" > /data/node3/algod-listen.net
-    
-    cd /data
-    goal network start -r /data
-    echo "✅ 网络已启动"
-    tail -f /dev/null
-  '
-```
-
-**或使用脚本启动（需要先手动配置监听地址）：**
-
 ```bash
 ./scripts/start_goal_network.sh
 ```
@@ -245,9 +175,6 @@ docker run -d \
 **验证网络状态：**
 
 ```bash
-# 等待启动
-sleep 10
-
 # 检查节点状态
 docker exec algo_private_network goal network status -r /data
 
@@ -258,44 +185,11 @@ docker exec algo_private_network goal network status -r /data
 # ...
 ```
 
-### 3.2 启动 KMD 服务（可选，用于账户管理）
-
-如果需要使用 `goal account` 命令管理账户，需要启动 KMD（Key Management Daemon）：
-
-```bash
-# 为每个节点启动 kmd
-docker exec algo_private_network goal kmd start -d /data/relay
-docker exec algo_private_network goal kmd start -d /data/node1
-docker exec algo_private_network goal kmd start -d /data/node2
-docker exec algo_private_network goal kmd start -d /data/node3
-
-# 验证 kmd 状态
-docker exec algo_private_network goal kmd status -d /data/node1
-
-# 列出账户（需要 kmd 运行）
-docker exec algo_private_network goal account list -d /data/node1
-```
-
-**注意：** 
-- KMD 不是必须的，API 调用不依赖 KMD
-- 只有使用 `goal account`、`goal wallet` 等命令时才需要 KMD
-- TPS 测试脚本直接从 genesis.json 读取账户信息，不需要 KMD
-
-### 3.2 理解初始状态
-
-**重要说明：** 
-- 初始时所有节点都在 **区块 0**
-- 网络已启动，但还在等待第一个区块达成共识
-- 这是正常的！共识协议需要时间来协调第一个区块
-- 通常在启动后 **10-30秒** 内会开始产生区块
-
 ---
 
 ## 第四步：验证网络
 
 ### 4.1 等待区块生成
-
-启动后等待约 15-30 秒，然后检查：
 
 ```bash
 docker exec algo_private_network goal network status -r /data
