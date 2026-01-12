@@ -1,5 +1,29 @@
 # Algorand 4节点私有网络 - 从零开始搭建指南
 
+本项目提供一个完全自动化的 Algorand 4节点私有网络搭建方案，支持 TPS 性能测试。
+
+## 🚀 快速开始
+
+```bash
+# 1. 生成网络配置（自动配置 API 端点）
+./scripts/create_network_config.sh
+
+# 2. 启动网络
+./scripts/start_goal_network.sh
+
+# 3. 验证 API 访问
+curl -H "X-Algo-API-Token: $(cat private_net_data/relay/algod.token)" \
+  http://localhost:4001/v2/status
+
+# 4. 运行 TPS 测试（可选）
+source venv/bin/activate
+python3 scripts/tps_test.py
+```
+
+> **重要：** `private_net_data/` 目录不在版本控制中（已在 `.gitignore` 中）。每次需要重新生成时，运行 `./scripts/create_network_config.sh` 即可自动配置好所有必要设置，无需手动修改配置文件。
+
+---
+
 ## 📋 目录
 
 1. [前置要求](#前置要求)
@@ -8,8 +32,9 @@
 4. [第三步：启动网络](#第三步启动网络)
 5. [第四步：验证网络](#第四步验证网络)
 6. [第五步：使用网络](#第五步使用网络)
-7. [性能测试（TPS 8 延迟）](#性能测试tps--延迟)
-8. [常用操作](#常用操作)
+7. [性能测试（TPS & 延迟）](#性能测试tps--延迟)
+8. [故障排除](#故障排除)
+9. [常用操作](#常用操作)
 
 ---
 
@@ -92,6 +117,12 @@ pip install py-algorand-sdk
 ./scripts/create_network_config.sh
 ```
 
+**脚本会自动完成：**
+1. 停止现有网络（如果存在）
+2. 清理旧配置
+3. 使用 `goal network create` 生成网络配置
+4. **自动配置 API 端点**（允许外部访问）
+
 **预期输出：**
 
 ```
@@ -115,7 +146,14 @@ participation key generation for Wallet3 completed successfully
 participation key generation for Wallet1 completed successfully
 
 Network privatenet created under /workspace/private_net_data
-✅ 网络配置已生成
+
+🔧 配置 API 端点...
+  ✅ relay: 0.0.0.0:8080
+  ✅ node1: 0.0.0.0:8081
+  ✅ node2: 0.0.0.0:8082
+  ✅ node3: 0.0.0.0:8083
+
+✅ 网络配置完成！
 ```
 
 ### 2.3 验证生成的文件
@@ -138,10 +176,16 @@ private_net_data/
 ├── Wallet3.0.3000000.partkey
 ├── Wallet4.rootkey
 ├── relay/                            # Relay节点数据目录
+│   └── config.json                   # 已配置 EndpointAddress: 0.0.0.0:8080
 ├── node1/                            # Node1数据目录
+│   └── config.json                   # 已配置 EndpointAddress: 0.0.0.0:8081
 ├── node2/                            # Node2数据目录
+│   └── config.json                   # 已配置 EndpointAddress: 0.0.0.0:8082
 └── node3/                            # Node3数据目录
+    └── config.json                   # 已配置 EndpointAddress: 0.0.0.0:8083
 ```
+
+> **重要提示：** `private_net_data/` 目录不会提交到版本控制（已在 `.gitignore` 中）。每次需要重新生成时，运行 `./scripts/create_network_config.sh` 即可自动配置好所有必要设置。
 
 ---
 
@@ -157,19 +201,28 @@ private_net_data/
 
 1. 检查 `private_net_data` 是否存在
 2. 启动 Docker 容器 `algo_private_network`
-3. 配置节点监听 `0.0.0.0`（允许容器外部访问）
-4. 在容器内运行 `goal network start -r /data`
-5. 映射端口：
+3. 在容器内运行 `goal network start -r /data`
+4. 映射端口：
    - 4001:8080 → Relay
    - 4002:8081 → Node1
    - 4003:8082 → Node2
    - 4004:8083 → Node3
-6. 等待10秒让节点启动并开始共识
+5. 等待10秒让节点启动并开始共识
 
 **预期输出：**
 
 ```
-✅ 网络已启动
+🚀 启动4节点 Algorand 私有网络
+
+[容器ID]
+⏳ 等待网络启动...
+
+📊 检查节点状态...
+Relay:
+Last committed block: 0
+Time since last block: 0.0s
+...
+✅ 私有网络已启动！
 ```
 
 **验证网络状态：**
@@ -220,7 +273,34 @@ Time since last block: 3.4s
 - ✅ 所有节点的区块号相同（同步）
 - ✅ `Time since last block` < 5秒（区块在持续生成）
 
-### 4.2 运行自动化测试
+### 4.2 验证 API 访问
+
+由于我们配置了 `EndpointAddress: 0.0.0.0:端口`，现在可以从主机访问 Algorand API：
+
+```bash
+# 获取 API token
+cat private_net_data/relay/algod.token
+
+# 测试 relay 节点 API（端口 4001）
+curl -H "X-Algo-API-Token: $(cat private_net_data/relay/algod.token)" \
+  http://localhost:4001/v2/status | python3 -m json.tool
+
+# 应该看到 JSON 响应，包含：
+# {
+#   "last-round": 15,
+#   "last-version": "...",
+#   "next-version": "...",
+#   ...
+# }
+```
+
+**端口映射：**
+- `http://localhost:4001` → Relay 节点
+- `http://localhost:4002` → Node1
+- `http://localhost:4003` → Node2
+- `http://localhost:4004` → Node3
+
+### 4.3 运行自动化测试
 
 ```bash
 ./scripts/test_goal_network.sh
@@ -374,347 +454,151 @@ watch -n 2 'docker exec algo_private_network goal node status -d /data/relay | g
 - 5×1000（5000 笔）：平均发送 TPS ~220，总 TPS ~60，平均延迟 ~31s（延迟随负载上升）
 
 提示：若需显著提升“总 TPS”，需调整节点配置（缩短出块间隔、提高单块容量/交易池），然后重启网络再压测。
-
 ---
 
-## 常用操作
+## 故障排除
 
-### 查看网络状态
+### 问题 1：API 连接失败 (HTTP 502 Bad Gateway)
 
+**症状：**
 ```bash
-# 所有节点状态
-docker exec algo_private_network goal network status -r /data
-
-# 单个节点状态
-docker exec algo_private_network goal node status -d /data/relay
-docker exec algo_private_network goal node status -d /data/node1
+python3 scripts/tps_test.py
+# ❌ 无法连接网络: HTTP Error 502: Bad Gateway
 ```
 
-### 查看日志
+**原因：**
+- `EndpointAddress` 未配置，节点 API 只监听 `127.0.0.1`（容器内部）
+- Docker 端口映射无法访问
 
+**解决方案：**
 ```bash
-# 容器日志
-docker logs -f algo_private_network
+# 1. 重新生成配置（会自动配置 EndpointAddress）
+./scripts/create_network_config.sh
 
-# 单个节点日志
-docker exec algo_private_network tail -f /data/node1/node.log
-```
-
-### 查看参与密钥
-
-```bash
-docker exec algo_private_network goal account listpartkeys -d /data/node1
-```
-
-### 管理 KMD 服务
-
-```bash
-# 启动 kmd（如果需要使用 goal account 命令）
-docker exec algo_private_network goal kmd start -d /data/node1
-
-# 检查 kmd 状态
-docker exec algo_private_network goal kmd status -d /data/node1
-
-# 停止 kmd
-docker exec algo_private_network goal kmd stop -d /data/node1
-```
-
-### 使用 goal account 命令
-
-```bash
-# 列出账户（需要 kmd 运行）
-docker exec algo_private_network goal account list -d /data/node1
-
-# 查看账户余额
-docker exec algo_private_network goal account balance -a <ADDRESS> -d /data/node1
-
-# 导出账户私钥
-docker exec algo_private_network goal account export -a <ADDRESS> -d /data/node1
-```
-
-### 停止网络
-
-```bash
+# 2. 重启网络
 docker stop algo_private_network
+./scripts/start_goal_network.sh
+
+# 3. 验证 API 端点
+docker exec algo_private_network cat /data/relay/algod.net
+# 应该显示: [::]:8080 或 0.0.0.0:8080
+
+# 4. 测试连接
+curl -H "X-Algo-API-Token: $(cat private_net_data/relay/algod.token)" \
+  http://localhost:4001/v2/status
 ```
 
-### 重新启动网络
+### 问题 2：容器名称冲突
 
+**症状：**
+```
+Error: The container name "/algo_private_network" is already in use
+```
+
+**解决方案：**
 ```bash
-# 停止（如果在运行）
+# 停止并删除现有容器
 docker stop algo_private_network
+docker rm algo_private_network
+
+# 或使用强制删除
+docker rm -f algo_private_network
 
 # 重新启动
 ./scripts/start_goal_network.sh
 ```
 
-### 完全重置网络
+### 问题 3：网络配置丢失
 
-如果需要从头开始：
+**症状：**
+```
+❌ 网络配置不存在，请先运行: ./scripts/create_network_config.sh
+```
 
+**原因：**
+`private_net_data/` 目录不在版本控制中，可能被删除或未生成
+
+**解决方案：**
 ```bash
-# 停止并删除容器
-docker stop algo_private_network 2>/dev/null || true
-docker rm algo_private_network 2>/dev/null || true
-
-# 删除所有配置
-rm -rf private_net_data
-
-# 重新生成配置
+# 重新生成网络配置
 ./scripts/create_network_config.sh
 
 # 启动网络
 ./scripts/start_goal_network.sh
 ```
 
----
+### 问题 4：节点无法启动或共识失败
 
-## 🎯 快速参考
+**症状：**
+- 区块号一直为 0
+- `Time since last block` 持续增加
 
-### 完整启动流程（首次）
-
+**解决方案：**
 ```bash
-# 0. 配置环境
-cd /path/to/algorand-private-network
+# 1. 查看节点日志
+docker exec algo_private_network tail -100 /data/relay/node.log
 
-# 1. 停止其他网络
-algokit localnet stop 2>/dev/null || true
-docker-compose down 2>/dev/null || true
-
-# 2. 生成配置
-./scripts/create_network_config.sh
-
-# 3. 启动网络（推荐方式）
-docker run -d \
-  --name algo_private_network \
-  -v "$PWD/private_net_data:/data" \
-  -p 4001:8080 -p 4002:8081 -p 4003:8082 -p 4004:8083 \
-  algorand/algod:latest \
-  bash -c '
-    echo "0.0.0.0:8080" > /data/relay/algod-listen.net
-    echo "0.0.0.0:8081" > /data/node1/algod-listen.net
-    echo "0.0.0.0:8082" > /data/node2/algod-listen.net
-    echo "0.0.0.0:8083" > /data/node3/algod-listen.net
-    cd /data && goal network start -r /data
-    echo "✅ 网络已启动"
-    tail -f /dev/null
-  '
-
-# 4. 等待区块生成（15-30秒）
-sleep 15
-
-# 5. 验证区块在增长
-for i in {1..5}; do
-  echo "=== 检查 $i/5 ==="
-  docker exec algo_private_network goal network status -r /data | grep "Last committed block"
-  sleep 5
-done
-
-# 6. 运行测试
-source venv/bin/activate
-./scripts/test_goal_network.sh
-```
-
-### 日常启动流程（配置已存在）
-
-```bash
-# 如果容器已停止
-docker start algo_private_network
-
-# 验证
+# 2. 检查所有节点状态
 docker exec algo_private_network goal network status -r /data
-```
 
-### 完全重置流程
-
-```bash
-# 停止并清理
-docker stop algo_private_network 2>/dev/null || true
-docker rm algo_private_network 2>/dev/null || true
-rm -rf private_net_data
-
-# 按首次启动流程重新开始
-./scripts/create_network_config.sh
-# ... (见上方完整启动流程)
-```
-
-### 端口映射
-
-| 节点 | 容器端口 | 主机端口 | API URL | Token 文件路径 |
-|------|---------|---------|---------|---------------|
-| Relay | 8080 | 4001 | http://localhost:4001 | private_net_data/relay/algod.token |
-| Node1 | 8081 | 4002 | http://localhost:4002 | private_net_data/node1/algod.token |
-| Node2 | 8082 | 4003 | http://localhost:4003 | private_net_data/node2/algod.token |
-| Node3 | 8083 | 4004 | http://localhost:4004 | private_net_data/node3/algod.token |
-
-### 测试 API 连接
-
-```bash
-# 测试 Relay 节点
-curl -s http://localhost:4001/v2/status \
-  -H "X-Algo-API-Token: $(cat private_net_data/relay/algod.token)" | python3 -m json.tool
-
-# 测试 Node1
-curl -s http://localhost:4002/v2/status \
-  -H "X-Algo-API-Token: $(cat private_net_data/node1/algod.token)" | python3 -m json.tool
-```
-
----
-
-## ❓ 常见问题
-
-### Q1: 区块一直停在某个数字不增长怎么办？
-
-**A:** 网络共识可能停止了，需要完全重置：
-
-```bash
-# 完全重置网络
+# 3. 如果问题持续，重新生成配置
 docker stop algo_private_network
-docker rm algo_private_network
 rm -rf private_net_data
+./scripts/create_network_config.sh
+./scripts/start_goal_network.sh
+```
 
-# 重新创建
+### 问题 5：手动修改配置后失效
+
+**注意：** 由于 `private_net_data/` 不在版本控制中，手动修改的配置会在重新生成时丢失。
+
+**正确做法：**
+1. 修改 `create_network_config.sh` 脚本，在生成配置后自动应用修改
+2. 或修改 `network_template.json` 模板文件
+3. 重新运行 `./scripts/create_network_config.sh`
+
+**示例 - 修改区块时间：**
+编辑 `network_template.json`，在 Genesis 配置中添加：
+```json
+{
+  "Genesis": {
+    "ConsensusProtocol": "future",
+    "NetworkName": "privatenet",
+    // 添加共识参数
+    "Proto": {
+      "AgreementFilterTimeoutPeriod0": 1000000000  // 1秒
+    }
+  }
+}
+```
+
+---
+
+## 常用命令速查
+
+```bash
+# 生成网络配置
 ./scripts/create_network_config.sh
 
-# 启动（使用正确配置）
-docker run -d \
-  --name algo_private_network \
-  -v "$PWD/private_net_data:/data" \
-  -p 4001:8080 -p 4002:8081 -p 4003:8082 -p 4004:8083 \
-  algorand/algod:latest \
-  bash -c '
-    echo "0.0.0.0:8080" > /data/relay/algod-listen.net
-    echo "0.0.0.0:8081" > /data/node1/algod-listen.net
-    echo "0.0.0.0:8082" > /data/node2/algod-listen.net
-    echo "0.0.0.0:8083" > /data/node3/algod-listen.net
-    cd /data && goal network start -r /data
-    tail -f /dev/null
-  '
+# 启动网络
+./scripts/start_goal_network.sh
 
-# 验证区块增长
-sleep 10
-docker exec algo_private_network goal network status -r /data | grep "Last committed block"
-```
-
-### Q2: API 返回 502 Bad Gateway 或连接被拒绝
-
-**A:** 节点没有监听 0.0.0.0，只监听了 127.0.0.1。需要创建 `algod-listen.net` 文件：
-
-```bash
 # 停止网络
-docker exec algo_private_network goal network stop -r /data
+docker stop algo_private_network
 
-# 配置监听地址
-docker exec algo_private_network bash -c '
-  echo "0.0.0.0:8080" > /data/relay/algod-listen.net
-  echo "0.0.0.0:8081" > /data/node1/algod-listen.net
-  echo "0.0.0.0:8082" > /data/node2/algod-listen.net
-  echo "0.0.0.0:8083" > /data/node3/algod-listen.net
-'
+# 查看状态
+docker exec algo_private_network goal network status -r /data
 
-# 重启网络
-docker exec algo_private_network goal network start -r /data
+# 查看日志
+docker logs -f algo_private_network
 
-# 测试连接
-curl -s http://localhost:4001/v2/status \
-  -H "X-Algo-API-Token: $(cat private_net_data/relay/algod.token)"
-```
-
-### Q3: Python 版本不兼容（capture_output 错误）
-
-**A:** 虚拟环境使用了 Python 3.6，需要重建：
-
-```bash
-rm -rf venv
-python --version  # 确认是 3.7+
-python -m venv venv
+# 运行 TPS 测试
 source venv/bin/activate
-pip install py-algorand-sdk
+python3 scripts/tps_test.py
+
+# 清理并重新开始
+docker stop algo_private_network
+rm -rf private_net_data
+./scripts/create_network_config.sh
+./scripts/start_goal_network.sh
 ```
-
-### Q4: goal account list 报错：connection refused
-
-**A:** KMD 服务未运行，需要启动：
-
-```bash
-# 启动 kmd
-docker exec algo_private_network goal kmd start -d /data/node1
-
-# 验证
-docker exec algo_private_network goal kmd status -d /data/node1
-
-# 再次尝试
-docker exec algo_private_network goal account list -d /data/node1
-```
-
-**注意：** 如果只使用 API 而不使用 `goal account` 命令，不需要启动 KMD。
-
-### Q5: 容器无法启动或端口被占用
-
-**A:** 检查端口并清理冲突：
-
-```bash
-# 检查端口占用
-lsof -i :4001
-netstat -tlnp | grep 4001
-
-# 停止所有 Algorand 相关容器
-docker stop $(docker ps -q --filter ancestor=algorand/algod)
-docker rm $(docker ps -aq --filter ancestor=algorand/algod)
-```
-
-### Q6: 如何备份网络配置？
-
-**A:** 复制整个数据目录：
-
-```bash
-cp -r private_net_data private_net_data.backup
-```
-
-### Q7: 参与密钥什么时候过期？
-
-**A:** 参与密钥有效期为 3,000,000 轮次。以每轮 4.5 秒计算，约 156 天。
-
----
-
-## ✅ 成功标志清单
-
-启动完成后，确认：
-
-- [ ] 容器 `algo_private_network` 正在运行 (`docker ps`)
-- [ ] 所有4个节点状态正常（无错误信息）
-- [ ] 区块号 > 0 且持续增长（每5秒观察一次，连续3次都在增长）
-- [ ] 所有节点区块号相同（同步）
-- [ ] API 可以正常访问（curl 返回 JSON 而不是 502/连接拒绝）
-- [ ] 测试脚本返回成功
-
-**验证命令：**
-
-```bash
-# 1. 容器运行
-docker ps --filter name=algo_private_network
-
-# 2. 区块增长测试
-for i in {1..3}; do
-  docker exec algo_private_network goal network status -r /data | grep "Last committed block"
-  sleep 5
-done
-
-# 3. API 连接测试
-curl -s http://localhost:4001/v2/status \
-  -H "X-Algo-API-Token: $(cat private_net_data/relay/algod.token)" | python3 -m json.tool | head -5
-
-# 4. 运行完整测试
-source venv/bin/activate
-./scripts/test_goal_network.sh
-```
-
-**恭喜！你的4节点 Algorand 私有网络已成功运行！** 🎉
-
----
-
-## 📚 相关文档
-
-- [完整使用指南](PRIVATE_NETWORK_GUIDE.md)
-- [Algorand 官方文档](https://developer.algorand.org/)
-- [Goal CLI 参考](https://developer.algorand.org/docs/clis/goal/goal/)

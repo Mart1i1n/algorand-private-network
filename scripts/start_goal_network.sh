@@ -23,15 +23,32 @@ docker run -d --rm \
   -p 4004:8083 \
   algorand/algod:latest \
   bash -c '
-    # 配置所有节点监听 0.0.0.0（允许外部访问）
-    echo "0.0.0.0:8080" > /data/relay/algod-listen.net
-    echo "0.0.0.0:8081" > /data/node1/algod-listen.net
-    echo "0.0.0.0:8082" > /data/node2/algod-listen.net
-    echo "0.0.0.0:8083" > /data/node3/algod-listen.net
-    
     cd /data
+    
+    # 修改所有节点的 config.json 以允许外部访问 API
+    for node in relay node1 node2 node3; do
+      if [ -f "/data/$node/config.json" ]; then
+        case $node in
+          relay) port=8080;;
+          node1) port=8081;;
+          node2) port=8082;;
+          node3) port=8083;;
+        esac
+        # 添加 EndpointAddress 配置以允许外部访问
+        python3 -c "
+import json
+with open('/data/$node/config.json', 'r') as f:
+    config = json.load(f)
+config['EndpointAddress'] = '0.0.0.0:$port'
+with open('/data/$node/config.json', 'w') as f:
+    json.dump(config, f, indent=8)
+"
+      fi
+    done
+    
+    # 启动网络
     goal network start -r /data
-    echo "✅ 网络已启动"
+    echo "✅ 网络已启动并配置外部访问"
     
     # 保持运行
     tail -f /dev/null
@@ -59,21 +76,4 @@ docker exec algo_private_network bash -c "
 
 echo ""
 echo "✅ 私有网络已启动！"
-echo ""
-echo "节点信息："
-echo "  Relay: http://localhost:4001"
-echo "  Node1: http://localhost:4002"
-echo "  Node2: http://localhost:4003"
-echo "  Node3: http://localhost:4004"
-echo ""
-echo "管理命令："
-echo "  查看状态: docker exec algo_private_network goal network status -r /data"
-echo "  停止网络: docker stop algo_private_network"
-echo "  查看日志: docker logs -f algo_private_network"
-echo ""
-echo "测试网络:"
-echo "  ./scripts/test_goal_network.sh"
-echo ""
-echo "验证区块增长:"
-echo "  for i in {1..3}; do docker exec algo_private_network goal network status -r /data | grep 'Last committed block'; sleep 5; done"
 echo ""
