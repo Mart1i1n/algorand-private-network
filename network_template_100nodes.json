@@ -1,0 +1,549 @@
+{
+  "Genesis": {
+    "NetworkName": "privatenet100",
+    "Wallets": [
+      {
+        "Name": "Wallet1",
+        "Stake": 25.0,
+        "Online": true
+      },
+      {
+        "Name": "Wallet2",
+        "Stake": 25.0,
+        "Online": true
+      },
+      {
+        "Name": "Wallet3",
+        "Stake": 25.0,
+        "Online": true
+      },
+      {
+        "Name": "Wallet4",
+        "Stake": 25.0,
+        "Online": true
+      }
+    ]
+  },
+  "Nodes": [
+    {
+      "Name": "relay1",
+      "IsRelay": true,
+      "Wallets": []
+    },
+    {
+      "Name": "relay2",
+      "IsRelay": true,
+      "Wallets": []
+    },
+    {
+      "Name": "node1",
+      "IsRelay": false,
+      "Wallets": [
+        {
+          "Name": "Wallet1",
+          "ParticipationOnly": false
+        }
+      ]
+    },
+    {
+      "Name": "node2",
+      "IsRelay": false,
+      "Wallets": [
+        {
+          "Name": "Wallet2",
+          "ParticipationOnly": false
+        }
+      ]
+    },
+    {
+      "Name": "node3",
+      "IsRelay": false,
+      "Wallets": [
+        {
+          "Name": "Wallet3",
+          "ParticipationOnly": false
+        }
+      ]
+    },
+    {
+      "Name": "node4",
+      "IsRelay": false,
+      "Wallets": [
+        {
+          "Name": "Wallet4",
+          "ParticipationOnly": false
+        }
+      ]
+    },
+    {
+      "Name": "node5",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node6",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node7",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node8",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node9",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node10",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node11",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node12",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node13",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node14",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node15",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node16",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node17",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node18",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node19",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node20",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node21",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node22",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node23",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node24",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node25",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node26",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node27",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node28",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node29",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node30",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node31",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node32",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node33",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node34",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node35",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node36",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node37",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node38",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node39",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node40",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node41",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node42",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node43",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node44",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node45",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node46",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node47",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node48",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node49",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node50",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node51",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node52",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node53",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node54",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node55",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node56",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node57",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node58",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node59",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node60",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node61",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node62",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node63",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node64",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node65",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node66",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node67",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node68",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node69",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node70",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node71",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node72",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node73",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node74",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node75",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node76",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node77",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node78",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node79",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node80",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node81",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node82",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node83",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node84",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node85",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node86",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node87",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node88",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node89",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node90",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node91",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node92",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node93",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node94",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node95",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node96",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node97",
+      "IsRelay": false,
+      "Wallets": []
+    },
+    {
+      "Name": "node98",
+      "IsRelay": false,
+      "Wallets": []
+    }
+  ]
+}

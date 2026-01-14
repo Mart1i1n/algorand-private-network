@@ -1,5 +1,6 @@
 # Algorand 私有网络数据目录
 private_net_data/
+private_net_data_100nodes/
 config/
 gpt.py
 study1_GPT_Gain_incremental.csv
