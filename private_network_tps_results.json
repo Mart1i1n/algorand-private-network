@@ -1,46 +1,24 @@
 {
-  "timestamp": "2026-01-12T21:56:25.346100",
-  "network": "4-node private network",
+  "timestamp": "2026-01-13T22:28:48.268406",
+  "network": "4-node private network (optimized test)",
   "rounds": [
     {
       "round": 1,
-      "sent": 30,
-      "confirmed": 30,
-      "send_time": 0.052375078201293945,
-      "confirm_time": 6.25862717628479,
-      "total_time": 6.311002254486084,
-      "send_tps": 572.7915075315121,
-      "total_tps": 4.753603118850883,
-      "latency": 9.0
-    },
-    {
-      "round": 2,
-      "sent": 30,
-      "confirmed": 30,
-      "send_time": 0.07603788375854492,
-      "confirm_time": 4.1299731731414795,
-      "total_time": 4.206011056900024,
-      "send_tps": 394.5401754639007,
-      "total_tps": 7.13264886709809,
-      "latency": 9.0
-    },
-    {
-      "round": 3,
-      "sent": 30,
-      "confirmed": 30,
-      "send_time": 0.07330012321472168,
-      "confirm_time": 4.103970050811768,
-      "total_time": 4.177270174026489,
-      "send_tps": 409.2762560864941,
-      "total_tps": 7.181723649701802,
-      "latency": 9.0
+      "sent": 10000,
+      "confirmed": 10000,
+      "send_time": 6.3402369022369385,
+      "confirm_time": 125.04768896102905,
+      "total_time": 131.387925863266,
+      "send_tps": 1577.2281310926785,
+      "total_tps": 76.11049443315585,
+      "latency": 225.0
     }
   ],
   "summary": {
-    "total_sent": 90,
-    "total_confirmed": 90,
-    "avg_send_tps": 458.86931302730227,
-    "avg_total_tps": 6.355991878550259,
-    "avg_latency": 9.0
+    "total_sent": 10000,
+    "total_confirmed": 10000,
+    "avg_send_tps": 1577.2281310926785,
+    "avg_total_tps": 76.11049443315585,
+    "avg_latency": 225.0
   }
 }

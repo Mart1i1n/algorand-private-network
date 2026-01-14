@@ -1,6 +1,9 @@
 # Algorand 私有网络数据目录
 private_net_data/
 config/
+gpt.py
+study1_GPT_Gain_incremental.csv
+study1_GPT_Loss_incremental.csv
 
 # Python
 venv/

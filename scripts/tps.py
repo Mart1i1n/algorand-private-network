@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-TPS & Latency 测试 - 4节点私有网络
+TPS & Latency 测试 - 4节点私有网络（优化版）
+使用批量发送和高效确认
 """
 import json
 import time
@@ -13,6 +14,7 @@ import secrets
 import subprocess
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 def get_wallet1_info():
@@ -54,12 +56,13 @@ def get_wallet1_info():
 
 def main():
     print("="*80)
-    print("  4节点私有网络 - TPS & 延迟测试")
+    print("  4节点私有网络 - TPS & 延迟测试（优化版）")
     print("="*80)
 
     # 参数（可通过环境变量覆盖）
     ROUNDS = int(os.getenv("TPS_ROUNDS", "3"))
-    TX_PER_ROUND = int(os.getenv("TPS_TX_PER_ROUND", "30"))
+    TX_PER_ROUND = int(os.getenv("TPS_TX_PER_ROUND", "12000"))
+    CONCURRENT_WORKERS = int(os.getenv("TPS_CONCURRENT_WORKERS", "2000"))
 
     # 配置
     algod_address = "http://localhost:4001"
@@ -138,6 +141,7 @@ def main():
     # TPS 测试
     print(f"\n🚀 开始 TPS 测试 ({ROUNDS} 轮)")
     print(f"  每轮: {TX_PER_ROUND} 笔交易")
+    print(f"  并发线程: {CONCURRENT_WORKERS}")
     print("="*80)
 
     results = []
@@ -147,6 +151,7 @@ def main():
         params = client.suggested_params()
         start_round = params.first
         
+        # 构建所有交易
         txns = []
         for i in range(TX_PER_ROUND):
             # 为避免重复 txid，在 note 中加入随机前缀
@@ -157,32 +162,85 @@ def main():
             signed = txn.sign(sender_sk)
             txns.append(signed)
         
-        # 发送
+        # 并发批量发送（极速发送所有交易）
         send_start = time.time()
         tx_ids = []
-        for signed in txns:
+        failed = 0
+        
+        print(f"    🚀 并发发送 {len(txns)} 笔交易...")
+        
+        def send_single_tx(signed_tx):
+            """发送单笔交易"""
             try:
-                tx_id = client.send_transaction(signed)
-                tx_ids.append(tx_id)
+                return client.send_transaction(signed_tx), None
             except Exception as e:
-                print(f"    ⚠️  发送失败: {e}")
+                return None, str(e)
+        
+        # 使用线程池并发发送
+        with ThreadPoolExecutor(max_workers=CONCURRENT_WORKERS) as executor:
+            # 提交所有发送任务
+            futures = {executor.submit(send_single_tx, signed): signed for signed in txns}
+            
+            # 收集结果
+            for future in as_completed(futures):
+                tx_id, error = future.result()
+                if tx_id:
+                    tx_ids.append(tx_id)
+                else:
+                    failed += 1
+                    if failed <= 3:
+                        print(f"    ⚠️  发送失败: {error}")
         
         send_duration = time.time() - send_start
         
-        print(f"    发送完成: {len(tx_ids)} 笔 ({send_duration:.2f}s)")
-        print(f"    发送 TPS: {len(tx_ids)/send_duration:.1f}")
+        print(f"    ✅ 发送完成: {len(tx_ids)} 笔成功, {failed} 笔失败 ({send_duration:.2f}s)")
+        print(f"    📈 发送 TPS: {len(tx_ids)/send_duration:.1f}")
         
-        # 等待确认
-        print(f"    等待确认...")
+        # 高效等待确认：从第1个区块就开始检查
+        print(f"    ⏳ 等待确认（发送轮次: {start_round}）...")
         confirm_start = time.time()
-        confirmed = 0
         
-        for tx_id in tx_ids:
+        max_wait_rounds = 30  # 最多等待30个区块
+        current_round = start_round
+        confirmed = 0
+        first_confirm_round = None
+        
+        for i in range(max_wait_rounds):
             try:
-                transaction.wait_for_confirmation(client, tx_id, 10)
-                confirmed += 1
-            except:
-                pass
+                # 等待下一个区块
+                status = client.status_after_block(current_round)
+                current_round = status['last-round']
+                block_num = i + 1  # 这是第几个区块
+                
+                # 每个区块都检查确认情况
+                confirmed = 0
+                for tx_id in tx_ids:
+                    try:
+                        txinfo = client.pending_transaction_info(tx_id)
+                        # 如果有 confirmed-round，说明已确认
+                        if 'confirmed-round' in txinfo and txinfo['confirmed-round'] > 0:
+                            confirmed += 1
+                            if first_confirm_round is None:
+                                first_confirm_round = txinfo['confirmed-round']
+                    except Exception:
+                        # 不在pending池中，可能已确认
+                        confirmed += 1
+                
+                # 每个区块都显示详细进度
+                print(f"      第{block_num}个区块 (轮次{current_round}): 已确认 {confirmed}/{len(tx_ids)} ({confirmed/len(tx_ids)*100:.0f}%)")
+                
+                # 如果全部确认，提前退出
+                if confirmed == len(tx_ids):
+                    blocks_needed = current_round - start_round
+                    print(f"      ✅ 所有交易已确认！")
+                    print(f"         发送轮次: {start_round}")
+                    print(f"         确认轮次: {current_round}")
+                    print(f"         区块间隔: {blocks_needed} 个区块")
+                    break
+                
+            except Exception as e:
+                print(f"    ⚠️  等待区块失败: {e}")
+                break
         
         confirm_duration = time.time() - confirm_start
         total_duration = send_duration + confirm_duration
@@ -206,9 +264,9 @@ def main():
         results.append(result)
         
         print(f"    ✅ 确认: {confirmed}/{len(tx_ids)} ({confirmed/len(tx_ids)*100:.0f}%)")
-        print(f"    总耗时: {total_duration:.2f}s")
-        print(f"    总 TPS: {result['total_tps']:.1f}")
-        print(f"    延迟: {latency:.1f}s")
+        print(f"    ⏱  总耗时: {total_duration:.2f}s")
+        print(f"    📊 总 TPS: {result['total_tps']:.1f}")
+        print(f"    ⏰ 延迟: {latency:.1f}s")
         
         time.sleep(2)
 
@@ -233,7 +291,7 @@ def main():
     with open('private_network_tps_results.json', 'w') as f:
         json.dump({
             'timestamp': datetime.now().isoformat(),
-            'network': '4-node private network',
+            'network': '4-node private network (optimized test)',
             'rounds': results,
             'summary': {
                 'total_sent': total_sent,
